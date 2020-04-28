@@ -28,7 +28,7 @@ public class PhotonRoom : MonoBehaviourPunCallbacks, IInRoomCallbacks
     public int nRounds = 3;
     public TextMeshProUGUI backToMenuTxt;
     int interval = 1;
-    float nextTime = 0;
+    float nextTime = 0;//(int)Time.time;
 
     //PHOTON NETWORK
     public Button quitButton;
@@ -65,7 +65,10 @@ public class PhotonRoom : MonoBehaviourPunCallbacks, IInRoomCallbacks
             waitForTurn();
         }
         backToMenuTxt.text = "[MENU]";
+        nextTime = (int)Time.time;
+
         StartOnlineMatch();
+        
     }
 
     private void startTurn()
@@ -478,8 +481,9 @@ public class PhotonRoom : MonoBehaviourPunCallbacks, IInRoomCallbacks
     // Update is called once per frame
     void Update()
     {
-        if (Time.time >= nextTime)
+        if (Time.time >= nextTime) //Time.timeSinceLevelLoaded
         {
+            PhotonNetwork.NetworkingClient.EventReceived += NetworkingClient_EventReceived;
             PhotonNetwork.NetworkingClient.EventReceived += NetworkingClient_EventReceived;
             //Debug.Log("Checking for events");
 

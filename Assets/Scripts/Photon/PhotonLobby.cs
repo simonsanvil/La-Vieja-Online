@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 
 //The lobby is responsible for setting up connection between players and Photon servers. And allow to join existing rooms or create new ones.
@@ -41,7 +43,7 @@ public class PhotonLobby : MonoBehaviourPunCallbacks
     public override void OnConnectedToMaster()
     {
         Debug.Log("Player has connected to the Photon master server");
-        PhotonNetwork.AutomaticallySyncScene = true;
+        //PhotonNetwork.AutomaticallySyncScene = true;
         matchButton.SetActive(true);
         friendButton.SetActive(true);
 
@@ -92,23 +94,27 @@ public class PhotonLobby : MonoBehaviourPunCallbacks
         Debug.Log("Local actor number (room): " + PhotonNetwork.LocalPlayer.ActorNumber);
 
         //PhotonNetwork.NickName = myNumberInRoom.ToString();
-        //if (!PhotonNetwork.IsMasterClient)
-        //{
-        //    Debug.Log("OnJoinedRoom: Not master client.");
-        //    return;
-        //}
-        if (playersInRoom >= 2){
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("OnJoinedRoom: Not master client.");
+            return;
+        }
+        if (playersInRoom == 2){
             Debug.Log("Room is full.");
             lookingText.text = "MATCH FOUND!";
             lookingText.color = Color.red;
             object content = "CMSG";
-            RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All }; // You would have to set the Receivers to All in order to receive this event on the local client as well
+            
+            // You would have to set the Receivers to All in order to receive this event on the local client as well
+            RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All }; 
+
             SendOptions sendOptions = new SendOptions { Reliability = true };
             PhotonNetwork.RaiseEvent(IS_FULL, content, raiseEventOptions, sendOptions);
+            PhotonNetwork.LoadLevel("Multiplayer");
         }
-        
-
     }
+
+
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         foreach (var entry in roomList)
@@ -116,6 +122,9 @@ public class PhotonLobby : MonoBehaviourPunCallbacks
             Debug.Log(entry.ToString());
         }
     }
+
+
+ 
 
     private void NetworkingClient_EventReceived(EventData obj)
     {
@@ -127,13 +136,14 @@ public class PhotonLobby : MonoBehaviourPunCallbacks
             lookingText.color = Color.red;
 
             //SceneManager.LoadScene("Multiplayer");
-            PhotonNetwork.AutomaticallySyncScene = true;
+            //PhotonNetwork.AutomaticallySyncScene = true;
             if (PhotonNetwork.IsMasterClient)
             {
-                PhotonNetwork.LoadLevel("Multiplayer");
+                PhotonNetwork.LoadLevel("Multiplayer"); //PhotonNetwork.LoadLevel(1);
                 OnlineScreen.SetActive(false);
+                Debug.Log("Changing scene to Multiplayer from Master Client");
             }
-            //PhotonNetwork.LoadLevel(1);
+            
         }
     }
 
